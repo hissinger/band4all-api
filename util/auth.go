@@ -1,7 +1,6 @@
 package util
 
 import (
-	"api-server/config"
 	"os"
 	"time"
 
@@ -28,6 +27,6 @@ func GenerateToken() (string, error) {
 
 func VerficateToken() func(*fiber.Ctx) error {
 	return jwtware.New(jwtware.Config{
-		SigningKey: []byte(config.SecretKey),
+		SigningKey: []byte(SECRET_KEY),
 	})
 }
