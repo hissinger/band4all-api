@@ -17,4 +17,7 @@ func SessionRoutes(app *fiber.App) {
 	v1.Post("/sessions", controllers.NewSession)
 	v1.Get("/sessions", controllers.ListSessions)
 	v1.Delete("/sessions/:id", controllers.DeleteSession)
+
+	v1.Put("/sessions/:sid/members", controllers.JoinSession)
+	v1.Delete("/sessions/:sid/members/:mid", controllers.LeaveSession)
 }

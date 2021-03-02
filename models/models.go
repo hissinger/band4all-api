@@ -14,6 +14,7 @@ type Session struct {
 	Private     bool      `json:"private", bson:"private"`
 	Creator     string    `json:"creator", bson:"creator"`
 	CreatedDate time.Time `json:"createdDate"`
+	Members     []string  `json:"members"`
 }
 
 type MQTTServer struct {

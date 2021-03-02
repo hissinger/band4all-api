@@ -16,11 +16,12 @@ type session struct {
 	Creator     string `json:"creator"`
 }
 
-func NewSession(c *fiber.Ctx) error {
-	// New Employee struct
-	s := &session{}
+type join struct {
+	ID string `json:"id"`
+}
 
-	// Parse body into struct
+func NewSession(c *fiber.Ctx) error {
+	s := &session{}
 	if err := c.BodyParser(s); err != nil {
 		return c.Status(400).SendString(err.Error())
 	}
@@ -43,6 +44,7 @@ func NewSession(c *fiber.Ctx) error {
 		Private:     s.Private,
 		Creator:     s.Creator,
 		CreatedDate: time.Now(),
+		Members:     []string{},
 	}
 	if err := mongoClient.CreateSession(sess); err != nil {
 		return c.SendStatus(fiber.StatusInternalServerError)
@@ -69,6 +71,46 @@ func DeleteSession(c *fiber.Ctx) error {
 
 	mongoClient := mongo.NewMongoConn()
 	err := mongoClient.DeleteSession(id)
+	if err != nil {
+		return c.SendStatus(fiber.StatusInternalServerError)
+	}
+
+	return c.SendStatus(fiber.StatusOK)
+}
+
+func JoinSession(c *fiber.Ctx) error {
+	sessionID := c.Params("sid")
+	if sessionID == "" {
+		return c.SendStatus(fiber.StatusBadRequest)
+	}
+
+	body := &join{}
+	if err := c.BodyParser(body); err != nil {
+		return c.Status(400).SendString(err.Error())
+	}
+
+	mongoClient := mongo.NewMongoConn()
+	err := mongoClient.JoinSession(sessionID, body.ID)
+	if err != nil {
+		return c.SendStatus(fiber.StatusInternalServerError)
+	}
+
+	return c.SendStatus(fiber.StatusOK)
+}
+
+func LeaveSession(c *fiber.Ctx) error {
+	sessionID := c.Params("sid")
+	if sessionID == "" {
+		return c.SendStatus(fiber.StatusBadRequest)
+	}
+
+	memberID := c.Params("mid")
+	if memberID == "" {
+		return c.SendStatus(fiber.StatusBadRequest)
+	}
+
+	mongoClient := mongo.NewMongoConn()
+	err := mongoClient.LeaveSession(sessionID, memberID)
 	if err != nil {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}

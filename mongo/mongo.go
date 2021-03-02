@@ -80,6 +80,34 @@ func (c *MongoClient) DeleteSession(id string) error {
 	return nil
 }
 
+func (c *MongoClient) JoinSession(sessionID string, memberID string) error {
+	filter := bson.M{"id": sessionID}
+	update := bson.M{
+		"$addToSet": bson.M{"members": memberID},
+	}
+
+	result := c.cli.Database(DATABASE).Collection(SESSIONS).FindOneAndUpdate(context.TODO(), filter, update, nil)
+	if result.Err() != nil {
+		log.Error(result.Err())
+		return result.Err()
+	}
+	return nil
+}
+
+func (c *MongoClient) LeaveSession(sessionID string, memberID string) error {
+	filter := bson.M{"id": sessionID}
+	update := bson.M{
+		"$pull": bson.M{"members": memberID},
+	}
+
+	result := c.cli.Database(DATABASE).Collection(SESSIONS).FindOneAndUpdate(context.TODO(), filter, update, nil)
+	if result.Err() != nil {
+		log.Error(result.Err())
+		return result.Err()
+	}
+	return nil
+}
+
 func (c *MongoClient) GetMQTT() (models.MQTTServer, error) {
 	var mqtt models.MQTTServer
 	err := c.cli.Database(DATABASE).Collection(MQTT).FindOne(context.TODO(), bson.M{}).Decode(&mqtt)
