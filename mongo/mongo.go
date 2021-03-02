@@ -16,7 +16,7 @@ import (
 const (
 	DATABASE = "band4all"
 	USERS    = "users"
-	SESSIONS = "sessions"
+	STUDIOS  = "studios"
 	MQTT     = "mqtt"
 	TURN     = "turn"
 )
@@ -52,8 +52,8 @@ func (c *MongoClient) CheckAuth(username string, password string) error {
 	return nil
 }
 
-func (c *MongoClient) CreateSession(s models.Session) error {
-	_, err := c.cli.Database(DATABASE).Collection(SESSIONS).InsertOne(context.TODO(), s)
+func (c *MongoClient) CreateStudio(s models.Studio) error {
+	_, err := c.cli.Database(DATABASE).Collection(STUDIOS).InsertOne(context.TODO(), s)
 	if err != nil {
 		log.Error("insert fail:", err)
 		return err
@@ -61,32 +61,33 @@ func (c *MongoClient) CreateSession(s models.Session) error {
 	return nil
 }
 
-func (c *MongoClient) ListSessions() ([]models.Session, error) {
-	var sessions []models.Session
-	cursor, err := c.cli.Database(DATABASE).Collection(SESSIONS).Find(context.TODO(), bson.D{})
-	if err = cursor.All(context.TODO(), &sessions); err != nil {
+func (c *MongoClient) ListStudios() ([]models.Studio, error) {
+	var studios []models.Studio
+	cursor, err := c.cli.Database(DATABASE).Collection(STUDIOS).Find(context.TODO(), bson.D{})
+	if err = cursor.All(context.TODO(), &studios); err != nil {
 		log.Error("list fail:", err)
-		return sessions, err
+		return studios, err
 	}
 
-	return sessions, nil
+	return studios, nil
 }
 
-func (c *MongoClient) DeleteSession(id string) error {
-	_, err := c.cli.Database(DATABASE).Collection(SESSIONS).DeleteOne(context.TODO(), bson.M{"id": id})
+func (c *MongoClient) DeleteStudio(id string) error {
+	_, err := c.cli.Database(DATABASE).Collection(STUDIOS).DeleteOne(context.TODO(), bson.M{"id": id})
 	if err != nil {
 		log.Error(err)
 	}
 	return nil
 }
 
-func (c *MongoClient) JoinSession(sessionID string, memberID string) error {
-	filter := bson.M{"id": sessionID}
+func (c *MongoClient) JoinPlayer(studioID string, playerID string) error {
+	filter := bson.M{"id": studioID}
 	update := bson.M{
-		"$addToSet": bson.M{"members": memberID},
+		"$addToSet": bson.M{"players": playerID},
 	}
 
-	result := c.cli.Database(DATABASE).Collection(SESSIONS).FindOneAndUpdate(context.TODO(), filter, update, nil)
+	// TODO: 중복 아이디 처리
+	result := c.cli.Database(DATABASE).Collection(STUDIOS).FindOneAndUpdate(context.TODO(), filter, update, nil)
 	if result.Err() != nil {
 		log.Error(result.Err())
 		return result.Err()
@@ -94,13 +95,14 @@ func (c *MongoClient) JoinSession(sessionID string, memberID string) error {
 	return nil
 }
 
-func (c *MongoClient) LeaveSession(sessionID string, memberID string) error {
-	filter := bson.M{"id": sessionID}
+func (c *MongoClient) LeavePlayer(studioID string, playerID string) error {
+	filter := bson.M{"id": studioID}
 	update := bson.M{
-		"$pull": bson.M{"members": memberID},
+		"$pull": bson.M{"players": playerID},
 	}
 
-	result := c.cli.Database(DATABASE).Collection(SESSIONS).FindOneAndUpdate(context.TODO(), filter, update, nil)
+	// TODO: not found id 처리
+	result := c.cli.Database(DATABASE).Collection(STUDIOS).FindOneAndUpdate(context.TODO(), filter, update, nil)
 	if result.Err() != nil {
 		log.Error(result.Err())
 		return result.Err()

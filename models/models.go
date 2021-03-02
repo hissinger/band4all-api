@@ -7,14 +7,14 @@ type User struct {
 	Password string
 }
 
-type Session struct {
+type Studio struct {
 	ID          string    `json:"id", bson:"id"`
 	Title       string    `json:"title", bson:"title"`
 	Description string    `json:"description", bson:"description"`
 	Private     bool      `json:"private", bson:"private"`
 	Creator     string    `json:"creator", bson:"creator"`
 	CreatedDate time.Time `json:"createdDate"`
-	Members     []string  `json:"members"`
+	Players     []string  `json:"members"`
 }
 
 type MQTTServer struct {

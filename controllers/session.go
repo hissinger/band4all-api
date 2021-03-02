@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type session struct {
+type studio struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
 	Private     bool   `json:"private"`
@@ -20,8 +20,8 @@ type join struct {
 	ID string `json:"id"`
 }
 
-func NewSession(c *fiber.Ctx) error {
-	s := &session{}
+func NewStudio(c *fiber.Ctx) error {
+	s := &studio{}
 	if err := c.BodyParser(s); err != nil {
 		return c.Status(400).SendString(err.Error())
 	}
@@ -37,40 +37,40 @@ func NewSession(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 
-	sess := models.Session{
+	studio := models.Studio{
 		ID:          uuid.New().String(),
 		Title:       s.Title,
 		Description: s.Description,
 		Private:     s.Private,
 		Creator:     s.Creator,
 		CreatedDate: time.Now(),
-		Members:     []string{},
+		Players:     []string{},
 	}
-	if err := mongoClient.CreateSession(sess); err != nil {
+	if err := mongoClient.CreateStudio(studio); err != nil {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 
-	return c.JSON(fiber.Map{"id": sess.ID, "mqtt": mqtt, "turn": turns})
+	return c.JSON(fiber.Map{"id": studio.ID, "mqtt": mqtt, "turn": turns})
 }
 
-func ListSessions(c *fiber.Ctx) error {
+func ListStudios(c *fiber.Ctx) error {
 	mongoClient := mongo.NewMongoConn()
-	sessions, err := mongoClient.ListSessions()
+	studios, err := mongoClient.ListStudios()
 	if err != nil {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 
-	return c.JSON(fiber.Map{"sessions": sessions})
+	return c.JSON(fiber.Map{"studios": studios})
 }
 
-func DeleteSession(c *fiber.Ctx) error {
+func DeleteStudio(c *fiber.Ctx) error {
 	id := c.Params("id")
 	if id == "" {
 		return c.SendStatus(fiber.StatusBadRequest)
 	}
 
 	mongoClient := mongo.NewMongoConn()
-	err := mongoClient.DeleteSession(id)
+	err := mongoClient.DeleteStudio(id)
 	if err != nil {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
@@ -78,9 +78,9 @@ func DeleteSession(c *fiber.Ctx) error {
 	return c.SendStatus(fiber.StatusOK)
 }
 
-func JoinSession(c *fiber.Ctx) error {
-	sessionID := c.Params("sid")
-	if sessionID == "" {
+func JoinPlayer(c *fiber.Ctx) error {
+	studioID := c.Params("sid")
+	if studioID == "" {
 		return c.SendStatus(fiber.StatusBadRequest)
 	}
 
@@ -90,7 +90,7 @@ func JoinSession(c *fiber.Ctx) error {
 	}
 
 	mongoClient := mongo.NewMongoConn()
-	err := mongoClient.JoinSession(sessionID, body.ID)
+	err := mongoClient.JoinPlayer(studioID, body.ID)
 	if err != nil {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
@@ -98,19 +98,19 @@ func JoinSession(c *fiber.Ctx) error {
 	return c.SendStatus(fiber.StatusOK)
 }
 
-func LeaveSession(c *fiber.Ctx) error {
-	sessionID := c.Params("sid")
-	if sessionID == "" {
+func LeavePlayer(c *fiber.Ctx) error {
+	studioID := c.Params("sid")
+	if studioID == "" {
 		return c.SendStatus(fiber.StatusBadRequest)
 	}
 
-	memberID := c.Params("mid")
-	if memberID == "" {
+	playerID := c.Params("pid")
+	if playerID == "" {
 		return c.SendStatus(fiber.StatusBadRequest)
 	}
 
 	mongoClient := mongo.NewMongoConn()
-	err := mongoClient.LeaveSession(sessionID, memberID)
+	err := mongoClient.LeavePlayer(studioID, playerID)
 	if err != nil {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}

@@ -12,12 +12,12 @@ func AuthRoutes(app *fiber.App) {
 	app.Use(util.VerficateToken())
 }
 
-func SessionRoutes(app *fiber.App) {
+func StudioRoutes(app *fiber.App) {
 	v1 := app.Group("/v1")
-	v1.Post("/sessions", controllers.NewSession)
-	v1.Get("/sessions", controllers.ListSessions)
-	v1.Delete("/sessions/:id", controllers.DeleteSession)
+	v1.Post("/studios", controllers.NewStudio)
+	v1.Get("/studios", controllers.ListStudios)
+	v1.Delete("/studios/:id", controllers.DeleteStudio)
 
-	v1.Put("/sessions/:sid/members", controllers.JoinSession)
-	v1.Delete("/sessions/:sid/members/:mid", controllers.LeaveSession)
+	v1.Put("/studios/:sid/players", controllers.JoinPlayer)
+	v1.Delete("/studios/:sid/players/:pid", controllers.LeavePlayer)
 }

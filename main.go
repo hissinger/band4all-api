@@ -20,7 +20,7 @@ func main() {
 	}))
 
 	routers.AuthRoutes(app)
-	routers.SessionRoutes(app)
+	routers.StudioRoutes(app)
 
 	log.Fatal(app.Listen(":3000"))
 }
