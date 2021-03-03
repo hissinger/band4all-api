@@ -61,6 +61,7 @@ func (c *MongoClient) CreateStudio(s models.Studio) error {
 	return nil
 }
 
+// TODO: pagination
 func (c *MongoClient) ListStudios() ([]models.Studio, error) {
 	var studios []models.Studio
 	cursor, err := c.cli.Database(DATABASE).Collection(STUDIOS).Find(context.TODO(), bson.D{})
@@ -81,12 +82,11 @@ func (c *MongoClient) DeleteStudio(id string) error {
 }
 
 func (c *MongoClient) JoinPlayer(studioID string, playerID string) error {
-	filter := bson.M{"id": studioID}
+	filter := bson.M{"id": studioID, "players.id": bson.M{"$ne": playerID}}
 	update := bson.M{
-		"$addToSet": bson.M{"players": playerID},
+		"$addToSet": bson.M{"players": bson.M{"id": playerID, "name": ""}},
 	}
 
-	// TODO: 중복 아이디 처리
 	result := c.cli.Database(DATABASE).Collection(STUDIOS).FindOneAndUpdate(context.TODO(), filter, update, nil)
 	if result.Err() != nil {
 		log.Error(result.Err())
@@ -98,7 +98,7 @@ func (c *MongoClient) JoinPlayer(studioID string, playerID string) error {
 func (c *MongoClient) LeavePlayer(studioID string, playerID string) error {
 	filter := bson.M{"id": studioID}
 	update := bson.M{
-		"$pull": bson.M{"players": playerID},
+		"$pull": bson.M{"players": bson.M{"id": playerID}},
 	}
 
 	// TODO: not found id 처리
@@ -108,6 +108,23 @@ func (c *MongoClient) LeavePlayer(studioID string, playerID string) error {
 		return result.Err()
 	}
 	return nil
+}
+
+func (c *MongoClient) ListPlayers(studioID string) ([]models.Player, error) {
+	type Result struct {
+		Players []models.Player `bson:"players"`
+	}
+	var result Result
+
+	filter := bson.M{"id": studioID}
+	projection := bson.M{"players": 1}
+	err := c.cli.Database(DATABASE).Collection(STUDIOS).FindOne(context.TODO(), filter, options.FindOne().SetProjection(projection)).Decode(&result)
+	if err != nil {
+		log.Error(err)
+		return result.Players, err
+	}
+
+	return result.Players, nil
 }
 
 func (c *MongoClient) GetMQTT() (models.MQTTServer, error) {

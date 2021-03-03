@@ -44,7 +44,7 @@ func NewStudio(c *fiber.Ctx) error {
 		Private:     s.Private,
 		Creator:     s.Creator,
 		CreatedDate: time.Now(),
-		Players:     []string{},
+		Players:     []models.Player{},
 	}
 	if err := mongoClient.CreateStudio(studio); err != nil {
 		return c.SendStatus(fiber.StatusInternalServerError)
@@ -96,6 +96,20 @@ func JoinPlayer(c *fiber.Ctx) error {
 	}
 
 	return c.SendStatus(fiber.StatusOK)
+}
+
+func ListPlayers(c *fiber.Ctx) error {
+	studioID := c.Params("sid")
+	if studioID == "" {
+		return c.SendStatus(fiber.StatusBadRequest)
+	}
+	mongoClient := mongo.NewMongoConn()
+	players, err := mongoClient.ListPlayers(studioID)
+	if err != nil {
+		return c.SendStatus(fiber.StatusInternalServerError)
+	}
+
+	return c.JSON(fiber.Map{"players": players})
 }
 
 func LeavePlayer(c *fiber.Ctx) error {

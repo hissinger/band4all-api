@@ -14,7 +14,12 @@ type Studio struct {
 	Private     bool      `json:"private", bson:"private"`
 	Creator     string    `json:"creator", bson:"creator"`
 	CreatedDate time.Time `json:"createdDate"`
-	Players     []string  `json:"members"`
+	Players     []Player  `json:"players"`
+}
+
+type Player struct {
+	ID   string `json:"id", bson:"id"`
+	Name string `json:"name", bson:"name"`
 }
 
 type MQTTServer struct {
