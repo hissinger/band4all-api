@@ -37,6 +37,12 @@ func NewMongoConn() *MongoClient {
 	return &MongoClient{client}
 }
 
+func (c *MongoClient) Close() {
+	if err := c.cli.Disconnect(context.TODO()); err != nil {
+		panic(err)
+	}
+}
+
 func (c *MongoClient) CheckAuth(username string, password string) error {
 	var user models.User
 	err := c.cli.Database(DATABASE).Collection(USERS).FindOne(context.TODO(), bson.M{"name": username}).Decode(&user)
@@ -65,6 +71,12 @@ func (c *MongoClient) CreateStudio(s models.Studio) error {
 func (c *MongoClient) ListStudios() ([]models.Studio, error) {
 	var studios []models.Studio
 	cursor, err := c.cli.Database(DATABASE).Collection(STUDIOS).Find(context.TODO(), bson.D{})
+	if err != nil {
+		log.Error("find:", err)
+		return studios, err
+	}
+	defer cursor.Close(context.TODO())
+
 	if err = cursor.All(context.TODO(), &studios); err != nil {
 		log.Error("list fail:", err)
 		return studios, err
@@ -145,6 +157,7 @@ func (c *MongoClient) GetTURNs() ([]models.TURNServer, error) {
 		log.Error(err)
 		return turns, err
 	}
+	defer cursor.Close(context.TODO())
 
 	if err = cursor.All(context.TODO(), &turns); err != nil {
 		log.Error(err)

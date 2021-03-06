@@ -27,6 +27,8 @@ func NewStudio(c *fiber.Ctx) error {
 	}
 
 	mongoClient := mongo.NewMongoConn()
+	defer mongoClient.Close()
+
 	mqtt, err := mongoClient.GetMQTT()
 	if err != nil {
 		return c.SendStatus(fiber.StatusInternalServerError)
@@ -55,6 +57,8 @@ func NewStudio(c *fiber.Ctx) error {
 
 func ListStudios(c *fiber.Ctx) error {
 	mongoClient := mongo.NewMongoConn()
+	defer mongoClient.Close()
+
 	studios, err := mongoClient.ListStudios()
 	if err != nil {
 		return c.SendStatus(fiber.StatusInternalServerError)
@@ -70,6 +74,8 @@ func DeleteStudio(c *fiber.Ctx) error {
 	}
 
 	mongoClient := mongo.NewMongoConn()
+	defer mongoClient.Close()
+
 	err := mongoClient.DeleteStudio(id)
 	if err != nil {
 		return c.SendStatus(fiber.StatusInternalServerError)
@@ -90,6 +96,8 @@ func JoinPlayer(c *fiber.Ctx) error {
 	}
 
 	mongoClient := mongo.NewMongoConn()
+	defer mongoClient.Close()
+
 	err := mongoClient.JoinPlayer(studioID, body.ID)
 	if err != nil {
 		return c.SendStatus(fiber.StatusInternalServerError)
@@ -104,6 +112,8 @@ func ListPlayers(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusBadRequest)
 	}
 	mongoClient := mongo.NewMongoConn()
+	defer mongoClient.Close()
+
 	players, err := mongoClient.ListPlayers(studioID)
 	if err != nil {
 		return c.SendStatus(fiber.StatusInternalServerError)
@@ -124,6 +134,8 @@ func LeavePlayer(c *fiber.Ctx) error {
 	}
 
 	mongoClient := mongo.NewMongoConn()
+	defer mongoClient.Close()
+
 	err := mongoClient.LeavePlayer(studioID, playerID)
 	if err != nil {
 		return c.SendStatus(fiber.StatusInternalServerError)

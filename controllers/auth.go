@@ -16,6 +16,7 @@ func Login(c *fiber.Ctx) error {
 	if err := mongoClient.CheckAuth(user, pass); err != nil {
 		return c.SendStatus(fiber.StatusUnauthorized)
 	}
+	defer mongoClient.Close()
 
 	encodedToken, err := util.GenerateToken()
 	if err != nil {
