@@ -22,6 +22,18 @@ type Player struct {
 	Name string `json:"name", bson:"name"`
 }
 
+type MqttAcl struct {
+	Topic string `bson:"topic"`
+	Acc   int32  `bson:"acc"`
+}
+
+type MqttUser struct {
+	Username  string    `bson:"username"`
+	Password  string    `bson:"password"`
+	Superuser bool      `bson:"superuser"`
+	Acls      []MqttAcl `bson:"acls"`
+}
+
 type MQTTServer struct {
 	IP       string `json:"ip", bson:"ip"`
 	Port     uint16 `json:"port", bson:"port"`

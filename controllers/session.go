@@ -7,6 +7,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	log "github.com/sirupsen/logrus"
 )
 
 type studio struct {
@@ -17,7 +18,8 @@ type studio struct {
 }
 
 type join struct {
-	ID string `json:"id"`
+	ID       string `json:"id"`
+	Password string `json:"password"`
 }
 
 func NewStudio(c *fiber.Ctx) error {
@@ -98,8 +100,12 @@ func JoinPlayer(c *fiber.Ctx) error {
 	mongoClient := mongo.NewMongoConn()
 	defer mongoClient.Close()
 
-	err := mongoClient.JoinPlayer(studioID, body.ID)
-	if err != nil {
+	if err := mongoClient.JoinPlayer(studioID, body.ID); err != nil {
+		return c.SendStatus(fiber.StatusInternalServerError)
+	}
+
+	if err := mongoClient.AddUserAcl(studioID, body.ID, body.Password, false); err != nil {
+		mongoClient.LeavePlayer(studioID, body.ID)
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 
@@ -136,8 +142,11 @@ func LeavePlayer(c *fiber.Ctx) error {
 	mongoClient := mongo.NewMongoConn()
 	defer mongoClient.Close()
 
-	err := mongoClient.LeavePlayer(studioID, playerID)
-	if err != nil {
+	if err := mongoClient.DelUserAcl(playerID); err != nil {
+		log.Warning(err)
+	}
+
+	if err := mongoClient.LeavePlayer(studioID, playerID); err != nil {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 
