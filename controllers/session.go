@@ -3,6 +3,7 @@ package controllers
 import (
 	"api-server/models"
 	"api-server/mongo"
+	"strconv"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -61,7 +62,19 @@ func ListStudios(c *fiber.Ctx) error {
 	mongoClient := mongo.NewMongoConn()
 	defer mongoClient.Close()
 
-	studios, err := mongoClient.ListStudios()
+	value := c.Query("page", "-1")
+	page, err := strconv.Atoi(value)
+	if err != nil {
+		return c.SendStatus(fiber.StatusBadRequest)
+	}
+
+	value = c.Query("limit", "-1")
+	limit, err := strconv.Atoi(value)
+	if err != nil {
+		return c.SendStatus(fiber.StatusBadRequest)
+	}
+
+	studios, err := mongoClient.ListStudios(page, limit)
 	if err != nil {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}

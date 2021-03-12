@@ -56,9 +56,19 @@ func (c *MongoClient) CreateStudio(s models.Studio) error {
 }
 
 // TODO: pagination
-func (c *MongoClient) ListStudios() ([]models.Studio, error) {
+func (c *MongoClient) ListStudios(page int, limit int) ([]models.Studio, error) {
 	var studios []models.Studio
-	cursor, err := c.collectionStudio().Find(context.TODO(), bson.D{})
+
+	opts := options.Find()
+	if page != -1 && limit != -1 {
+		skip := page * limit
+		opts.SetSkip(int64(skip))
+	}
+	if limit != -1 {
+		opts.SetLimit(int64(limit))
+	}
+
+	cursor, err := c.collectionStudio().Find(context.TODO(), bson.D{}, opts)
 	if err != nil {
 		log.Error("find:", err)
 		return studios, err
